@@ -1,18 +1,43 @@
-import React, { createContext } from 'react';
-import {useLocalStore} from 'mobx-react';
+import { useLocalObservable } from 'mobx-react';
+import React, { createContext, useContext } from 'react';
 
-export const StoreContext = createContext();
-
-export const StoreProvider = ({children}) => {
-    const store = useLocalStore(() => ({
-        things: ["thing1"],
-        addThing: thing => store.things.push(thing),
-        get thingsCount() {
-            return store.things.length;
+//Store factory function
+const createDataStore = () => {
+    return {
+        data: null,
+        fetching: false,
+        addData: function (newData) {
+            this.data = newData
+        },
+        toggleFetching: function (newValue: boolean) {
+            this.fetching = newValue;
+        },
+        get currentData() {
+            return this.data
+        },
+        get isFetching() {
+            return this.fetching
         }
-    }));
+    }
+}
 
+//Context
+export const StoreContext = createContex(null);
+
+//Context Provider
+export const StoreProvider = ({ children }) => {
+    const dataStore = useLocalObservable(createDataStore)
     return (
-        <StoreContext.Provider value={store}>{children}</StoreContext.Provider>
+        <StoreContext.Provider value={dataStore}>{children}</StoreContext.Provider>
     );
 }
+
+//Context consumer hook
+export const useDataStore = () => {
+    const dataStore = useContext(StoreContext)
+    if (!dataStore) {
+        throw new Error('useDataStore must be used within a StoreProvider.')
+    }
+    return dataStore
+}
+
